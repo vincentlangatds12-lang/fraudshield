@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from api.routers import (
     analytics, transactions, predictions, review,
@@ -70,22 +71,35 @@ def on_startup():
 
 
 # ── Serve Angular SPA (must come LAST) ───────────────────────────────────────
-_FRONTEND_DIST = (
-    Path(__file__).resolve().parent.parent.parent
-    / "frontend" / "dist" / "fraud-detection" / "browser"
-)
+# Angular 17+ builder outputs to dist/<project>/browser/
+_CANDIDATE_PATHS = [
+    # Relative: works locally and when rootDir=backend on Render
+    Path(__file__).resolve().parent.parent.parent / "frontend" / "dist" / "fraud-detection" / "browser",
+    # Absolute Render path
+    Path("/opt/render/project/src/frontend/dist/fraud-detection/browser"),
+]
 
-# On Render the project is cloned to /opt/render/project/src
-# so check both relative and absolute paths
-if not _FRONTEND_DIST.exists():
-    _RENDER_PATH = Path("/opt/render/project/src/frontend/dist/fraud-detection/browser")
-    if _RENDER_PATH.exists():
-        _FRONTEND_DIST = _RENDER_PATH
+_FRONTEND_DIST: Path | None = next((p for p in _CANDIDATE_PATHS if p.exists()), None)
 
-if _FRONTEND_DIST.exists():
+if _FRONTEND_DIST:
+    print(f"[SPA] Serving Angular from: {_FRONTEND_DIST}")
+    # Serve static assets (js, css, images) directly
+    app.mount("/assets", StaticFiles(directory=str(_FRONTEND_DIST / "assets")), name="assets") if (_FRONTEND_DIST / "assets").exists() else None
+
     @app.get("/{full_path:path}", include_in_schema=False)
     def serve_spa(full_path: str):
+        # Skip API routes (shouldn't reach here, but safety net)
+        if full_path.startswith("api/"):
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404)
         candidate = _FRONTEND_DIST / full_path
         if candidate.is_file():
             return FileResponse(str(candidate))
+        # All other paths → index.html (Angular client-side routing)
         return FileResponse(str(_FRONTEND_DIST / "index.html"))
+else:
+    print("[SPA] Angular dist not found — serving API only")
+
+    @app.get("/", include_in_schema=False)
+    def root():
+        return {"status": "ok", "docs": "/api/docs", "health": "/api/health"}

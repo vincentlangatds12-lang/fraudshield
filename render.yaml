@@ -8,7 +8,7 @@ services:
       pip install -r requirements.txt &&
       cd ../frontend &&
       npm install --legacy-peer-deps &&
-      npm run build
+      npm run build -- --configuration production
     startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
     plan: free
     envVars:
@@ -17,7 +17,7 @@ services:
       - key: SESSION_SECRET_KEY
         generateValue: true
       - key: FRONTEND_ORIGIN
-        sync: false
+        value: https://fraudshield-4.onrender.com
       - key: KMP_DUPLICATE_LIB_OK
         value: "TRUE"
       - key: FLAML_TIME_BUDGET
