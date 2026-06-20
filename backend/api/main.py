@@ -68,6 +68,21 @@ def health():
 @app.on_event("startup")
 def on_startup():
     init_db()
+    # Auto-ingest raw CSVs if DB is empty (first deploy on a fresh instance)
+    import threading
+    from pipeline.db import Session as _Session, Transaction as _Transaction
+    from config.settings import RAW_DATA_DIR as _RAW
+    from pathlib import Path as _Path
+    session = _Session()
+    try:
+        count = session.query(_Transaction).count()
+    finally:
+        session.close()
+    if count == 0 and (_Path(_RAW) / "train.csv").exists():
+        print("[STARTUP] Empty DB detected — auto-ingesting raw CSVs...")
+        from api.routers.pipeline import _ingest_bg
+        t = threading.Thread(target=_ingest_bg, args=(_RAW,), daemon=True)
+        t.start()
 
 
 # ── Serve Angular SPA (must come LAST) ───────────────────────────────────────
