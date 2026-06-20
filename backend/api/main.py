@@ -36,6 +36,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         FRONTEND_ORIGIN,
+        "https://fraudshield-ui.onrender.com",
         "http://localhost:4200",
         "http://localhost:4300",
         "http://127.0.0.1:4300",
