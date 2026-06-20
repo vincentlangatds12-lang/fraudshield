@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: fraudshield
+    runtime: python
+    rootDir: backend
+    buildCommand: >
+      pip install -r requirements.txt &&
+      cd ../frontend &&
+      npm install --legacy-peer-deps &&
+      npm run build
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: DB_MODE
+        value: sqlite
+      - key: SESSION_SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: KMP_DUPLICATE_LIB_OK
+        value: "TRUE"
+      - key: FLAML_TIME_BUDGET
+        value: "300"
+      - key: PYTHONPATH
+        value: /opt/render/project/src/backend
+    disk:
+      name: fraudshield-data
+      mountPath: /data
+      sizeGB: 2

@@ -1,0 +1,200 @@
+// ── Light theme (default) ─────────────────────────────────────────────────────
+:root {
+  --bg:              #f8fafc;
+  --card-bg:         #ffffff;
+  --border:          #e2e8f0;
+  --hover-bg:        #f1f5f9;
+  --text:            #0f172a;
+  --text-muted:      #64748b;
+  --accent:          #2563eb;
+  --accent-light:    #eff6ff;
+  --danger:          #ef4444;
+  --success:         #10b981;
+  --warning:         #f59e0b;
+  --sidebar-bg:      #1e293b;
+  --sidebar-text:    #94a3b8;
+  --sidebar-active:  #ffffff;
+  --sidebar-active-bg: rgba(255,255,255,.1);
+  --input-bg:        #ffffff;
+  --input-border:    #cbd5e1;
+  --shadow-sm:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:       0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+  --shadow-lg:       0 10px 25px rgba(0,0,0,.1), 0 4px 10px rgba(0,0,0,.06);
+  --table-header-bg: #f8fafc;
+  --table-stripe:    #f8fafc;
+
+  // Code blocks — dark in light mode (intentional terminal look)
+  --code-bg:         #1e293b;
+  --code-text:       #e2e8f0;
+
+  // Info / warning cards
+  --info-card-bg:    #fffbeb;
+  --info-card-border:#fde68a;
+  --info-card-text:  #78350f;
+  --info-card-heading:#92400e;
+  --info-card-code:  #fef3c7;
+
+  // Step states
+  --step-running-bg: #eff6ff;
+  --step-running-border: #93c5fd;
+  --step-running-text: #1d4ed8;
+  --step-done-bg:    #f0fdf4;
+  --step-done-border:#bbf7d0;
+  --step-done-text:  #15803d;
+  --step-error-bg:   #fef2f2;
+  --step-error-border:#fca5a5;
+  --step-error-text: #b91c1c;
+
+  // Success / error messages
+  --success-msg-bg:  #f0fdf4;
+  --success-msg-border: #bbf7d0;
+  --success-msg-text:#15803d;
+  --error-msg-bg:    #fef2f2;
+  --error-msg-border:#fecaca;
+  --error-msg-text:  #b91c1c;
+
+  // Badges
+  --badge-success-bg: #dcfce7;
+  --badge-success-text: #15803d;
+  --badge-danger-bg:  #fee2e2;
+  --badge-danger-text:#b91c1c;
+  --badge-warning-bg: #fef3c7;
+  --badge-warning-text:#92400e;
+  --badge-info-bg:    #eff6ff;
+  --badge-info-text:  #1d4ed8;
+  --badge-clf-bg:     #eff6ff;
+  --badge-clf-text:   #1d4ed8;
+  --champion-bg:      rgba(251,191,36,.05);
+  --champion-row-bg:  #fffbeb;
+}
+
+// ── Dark theme ────────────────────────────────────────────────────────────────
+[data-theme="dark"] {
+  --bg:              #0f172a;
+  --card-bg:         #1e293b;
+  --border:          #334155;
+  --hover-bg:        #253347;
+  --text:            #f1f5f9;
+  --text-muted:      #94a3b8;
+  --accent:          #3b82f6;
+  --accent-light:    #1e3a5f;
+  --danger:          #f87171;
+  --success:         #34d399;
+  --warning:         #fbbf24;
+  --sidebar-bg:      #0f172a;
+  --sidebar-text:    #64748b;
+  --sidebar-active:  #f1f5f9;
+  --sidebar-active-bg: rgba(255,255,255,.06);
+  --input-bg:        #1e293b;
+  --input-border:    #475569;
+  --shadow-sm:       0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:       0 4px 6px rgba(0,0,0,.3);
+  --shadow-lg:       0 10px 25px rgba(0,0,0,.4);
+  --table-header-bg: #162032;
+  --table-stripe:    #162032;
+
+  --code-bg:         #0f172a;
+  --code-text:       #94a3b8;
+
+  --info-card-bg:    #2d2410;
+  --info-card-border:#78350f;
+  --info-card-text:  #fde68a;
+  --info-card-heading:#fbbf24;
+  --info-card-code:  #1c1706;
+
+  --step-running-bg:     #172554;
+  --step-running-border: #1e40af;
+  --step-running-text:   #93c5fd;
+  --step-done-bg:        #052e16;
+  --step-done-border:    #166534;
+  --step-done-text:      #86efac;
+  --step-error-bg:       #2d0a0a;
+  --step-error-border:   #991b1b;
+  --step-error-text:     #fca5a5;
+
+  --success-msg-bg:      #052e16;
+  --success-msg-border:  #166534;
+  --success-msg-text:    #86efac;
+  --error-msg-bg:        #2d0a0a;
+  --error-msg-border:    #991b1b;
+  --error-msg-text:      #fca5a5;
+
+  --badge-success-bg:    rgba(52,211,153,.15);
+  --badge-success-text:  #34d399;
+  --badge-danger-bg:     rgba(248,113,113,.15);
+  --badge-danger-text:   #f87171;
+  --badge-warning-bg:    rgba(251,191,36,.15);
+  --badge-warning-text:  #fbbf24;
+  --badge-info-bg:       rgba(59,130,246,.15);
+  --badge-info-text:     #93c5fd;
+  --badge-clf-bg:        rgba(59,130,246,.15);
+  --badge-clf-text:      #93c5fd;
+  --champion-bg:         rgba(251,191,36,.08);
+  --champion-row-bg:     rgba(251,191,36,.06);
+}
+
+// ── Smooth transition for theme switches ──────────────────────────────────────
+*, *::before, *::after {
+  transition:
+    background-color .2s ease,
+    border-color .2s ease,
+    color .15s ease,
+    box-shadow .2s ease;
+  box-sizing: border-box;
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+code, pre { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+
+// ── Scrollbars ────────────────────────────────────────────────────────────────
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+// ── Global input styles ───────────────────────────────────────────────────────
+input, select, textarea {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text);
+  font-family: inherit;
+
+  &::placeholder { color: var(--text-muted); }
+  &:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+// ── Selection ─────────────────────────────────────────────────────────────────
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+// ── Selection ─────────────────────────────────────────────────────────────────
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+// ── Global page layout ────────────────────────────────────────────────────────
+// Wrap every page content in max-width with auto margins for centering
+.page, .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 28px;
+  box-sizing: border-box;
+  width: 100%;
+}

@@ -1,0 +1,43 @@
+@use '../../shared/page-layout' as *;
+
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+  @media(max-width:900px){ grid-template-columns:1fr; } }
+
+.chart-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  &__title { margin: 0 0 14px; font-size: .9rem; font-weight: 600; } }
+
+.table-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.table-wrap { overflow-x: auto; }
+
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: .82rem;
+  th { background: var(--card-bg); padding: 10px 12px; text-align: left; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .sortable { cursor: pointer; user-select: none; &:hover { color: var(--accent); } }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--hover-bg); }
+}
+
+.champion-row td { background: rgba(251,191,36,.06) !important; }
+.champion-star { font-size: 1rem; }
+.champion-col { text-align: center; }
+.text-center  { text-align: center; }
+
+.clf-name  { font-weight: 600; font-family: monospace; color: var(--accent); font-size: .82rem; }
+.strategy-tag { background: var(--border); padding: 2px 8px; border-radius: 4px; font-size: .72rem; font-family: monospace; color: var(--text-muted); }
+.muted { color: var(--text-muted); }
+
+.metric--excellent { color: #15803d; font-weight: 700; }
+.metric--good      { color: #0369a1; font-weight: 600; }
+.metric--fair      { color: #b45309; }
+.metric--poor      { color: #b91c1c; }
+
+.badge { display:inline-block; padding:4px 12px; border-radius:99px; font-size:.75rem; font-weight:600;
+  &--info { background:#eff6ff; color:#1d4ed8; } }
+
+.empty-state { text-align:center; padding:60px 20px; color:var(--text-muted);
+  .empty-icon { font-size:3rem; margin-bottom:12px; } }
+
+.loading-page { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:16px; color:var(--text-muted); }
+.spinner-ring { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

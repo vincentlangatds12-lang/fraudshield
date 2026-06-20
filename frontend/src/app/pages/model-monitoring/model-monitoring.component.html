@@ -1,0 +1,101 @@
+<div class="page" *ngIf="!loading; else loadTpl">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Model Health &amp; Monitoring</h1>
+      <p class="page-sub">Calibration · Score distribution · MLflow experiment runs</p>
+    </div>
+    <a *ngIf="mlflowUrl" href="http://localhost:5000" target="_blank" class="btn btn--outline">
+      🔗 Open MLflow UI
+    </a>
+  </div>
+
+  <!-- ── Model version cards ─────────────────────────────────────────────── -->
+  <h2 class="section-title">Trained Model Versions</h2>
+  <div class="version-grid" *ngIf="versions.length; else noVersions">
+    <div class="version-card" *ngFor="let v of versions" [class.champion]="v.is_champion">
+      <div class="version-card__header">
+        <span class="clf-tag">{{ v.classifier_name }}</span>
+        <span *ngIf="v.is_champion" class="champion-badge">⭐ Champion</span>
+      </div>
+      <div class="version-card__metrics">
+        <div class="vm" *ngFor="let m of [
+          {l:'PR-AUC', k:'pr_auc'}, {l:'AUC-ROC', k:'auc_roc'},
+          {l:'F1', k:'f1_fraud'}, {l:'MCC', k:'mcc'}]">
+          <span class="vm__label">{{ m.l }}</span>
+          <span class="vm__value" [class]="metricClass(v[m.k])">{{ (v[m.k] || 0) | number:'1.4-4' }}</span>
+        </div>
+      </div>
+      <div class="version-card__meta">
+        <span>Strategy: <strong>{{ v.imbalance_strategy }}</strong></span>
+        <span>{{ v.trained_at | date:'MMM d, y HH:mm' }}</span>
+        <span class="run-id">{{ v.run_id | slice:0:8 }}…</span>
+      </div>
+    </div>
+  </div>
+  <ng-template #noVersions>
+    <div class="empty-state"><div class="empty-icon">🤖</div><p>No models yet — run the ML pipeline.</p></div>
+  </ng-template>
+
+  <!-- ── Health charts ───────────────────────────────────────────────────── -->
+  <h2 class="section-title">Model Health Charts</h2>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3 class="chart-card__title">🎯 Calibration Curve</h3>
+      <p class="chart-card__sub">Predicted probability vs actual fraud rate — bars should track the line for a well-calibrated model</p>
+      <app-chart [options]="calibrationOpts" height="260px"></app-chart>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-card__title">📊 Score Distribution</h3>
+      <p class="chart-card__sub">Green = low risk · Amber = review zone · Red = alarm zone</p>
+      <app-chart [options]="scoreDistOpts" height="260px"></app-chart>
+    </div>
+  </div>
+
+  <!-- ── MLflow runs table ───────────────────────────────────────────────── -->
+  <h2 class="section-title">MLflow Experiment Runs</h2>
+
+  <div class="mlflow-hint">
+    <span>📌 To view full MLflow UI with artifact browser:</span>
+    <code>mlflow ui --backend-store-uri sqlite:///backend/data/mlflow.db --port 5000</code>
+  </div>
+
+  <div class="table-card" *ngIf="runs.length; else noRuns">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Run ID</th><th>Classifier</th><th>Strategy</th><th>Champion</th>
+            <th>AUC-ROC</th><th>PR-AUC</th><th>F1 Fraud</th><th>Accuracy</th>
+            <th>MCC</th><th>KS-Stat</th><th>Precision</th><th>Recall</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of runs" [class.champion-row]="r.is_champion">
+            <td class="mono">{{ r.run_id | slice:0:8 }}…</td>
+            <td><span class="clf-tag">{{ r.classifier }}</span></td>
+            <td><span class="strategy-tag">{{ r.strategy }}</span></td>
+            <td class="text-center"><span *ngIf="r.is_champion">⭐</span></td>
+            <td><span [class]="metricClass(r.metrics?.auc_roc)">{{ (r.metrics?.auc_roc || 0) | number:'1.4-4' }}</span></td>
+            <td><span [class]="metricClass(r.metrics?.pr_auc)">{{ (r.metrics?.pr_auc || 0) | number:'1.4-4' }}</span></td>
+            <td><span [class]="metricClass(r.metrics?.f1_fraud)">{{ (r.metrics?.f1_fraud || 0) | number:'1.4-4' }}</span></td>
+            <td>{{ (r.metrics?.accuracy || 0) | number:'1.4-4' }}</td>
+            <td>{{ (r.metrics?.mcc || 0) | number:'1.4-4' }}</td>
+            <td>{{ (r.metrics?.ks_statistic || 0) | number:'1.4-4' }}</td>
+            <td>{{ (r.metrics?.precision_fraud || 0) | number:'1.4-4' }}</td>
+            <td>{{ (r.metrics?.recall_fraud || 0) | number:'1.4-4' }}</td>
+            <td><span class="status-pill" [class.status-pill--ok]="r.status === 'FINISHED'">{{ r.status }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ng-template #noRuns>
+    <div class="empty-state"><div class="empty-icon">📊</div><p>No MLflow runs yet — run the ML pipeline first.</p></div>
+  </ng-template>
+
+</div>
+<ng-template #loadTpl>
+  <div class="loading-page"><div class="spinner-ring"></div><p>Loading…</p></div>
+</ng-template>

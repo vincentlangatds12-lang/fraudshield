@@ -1,0 +1,280 @@
+// ── Shell ─────────────────────────────────────────────────────────────────────
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// HEADER
+// ═════════════════════════════════════════════════════════════════════════════
+.header {
+  display: flex;
+  align-items: center;
+  height: 76px;                        // tall enough for the large logo
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+  gap: 0;
+}
+
+// ── Brand ─────────────────────────────────────────────────────────────────────
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  flex-shrink: 0;
+  margin-right: 36px;
+
+  &__logo {
+    width: 68px;                       // large and prominent
+    height: 68px;
+    object-fit: contain;
+    border-radius: 14px;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,.22));
+    flex-shrink: 0;
+    transition: transform .2s;
+  }
+
+  &:hover &__logo { transform: scale(1.06); }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__name {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -.03em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  &__by {
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+}
+
+// ── 4 main tabs — hug content, don't stretch ──────────────────────────────────
+.main-tabs {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  gap: 2px;
+  // Do NOT flex:1 — let tabs be natural width
+}
+
+.main-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: .88rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  transition: background .15s, color .15s;
+  border-bottom: 3px solid transparent;
+  padding: 0 22px;           // fixed horizontal padding — not stretched
+  position: relative;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--hover-bg);
+    color: var(--text);
+  }
+
+  &--active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  &__icon  { font-size: 1.05rem; line-height: 1; }
+}
+
+// ── Right controls — always pushed to the far right ──────────────────────────
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;     // pushes everything to the right edge
+  flex-shrink: 0;
+  padding-left: 16px;    // small gap from tabs
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+
+  &:hover { background: var(--hover-bg); border-color: var(--accent); }
+}
+
+// ── User button ───────────────────────────────────────────────────────────────
+.user-wrap   { position: relative; }
+
+.user-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  &:hover { background: var(--hover-bg); border-color: var(--accent); }
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  color: #fff;
+  font-size: .9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &--lg { width: 42px; height: 42px; font-size: 1.05rem; }
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+
+  &__name { font-size: .84rem; font-weight: 600; color: var(--text); white-space: nowrap; }
+  &__role { font-size: .7rem; color: var(--text-muted); text-transform: capitalize; }
+}
+
+.chevron {
+  font-size: .72rem;
+  color: var(--text-muted);
+  transition: transform .15s;
+  &.open { transform: rotate(180deg); }
+}
+
+// ── User dropdown ─────────────────────────────────────────────────────────────
+.user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  min-width: 210px;
+  z-index: 200;
+  animation: popIn .15s ease;
+
+  &__profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px 8px;
+  }
+  &__name { font-size: .9rem; font-weight: 700; color: var(--text); }
+  &__role { font-size: .72rem; color: var(--text-muted); text-transform: capitalize; margin-top: 1px; }
+  &__divider { height: 1px; background: var(--border); margin: 4px 6px; }
+  &__item {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 9px 12px; border-radius: 8px; border: none;
+    background: none; cursor: pointer; font-size: .85rem;
+    font-weight: 500; color: var(--text-muted); text-align: left;
+    transition: background .12s, color .12s;
+    &:hover { background: rgba(239,68,68,.1); color: var(--danger); }
+  }
+}
+
+@keyframes popIn {
+  from { opacity:0; transform:translateY(-6px) scale(.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// SUB-NAV (pill row shown below header for groups with multiple routes)
+// ═════════════════════════════════════════════════════════════════════════════
+.subnav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 28px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.subnav-pill {
+  padding: 6px 16px;
+  border-radius: 99px;
+  font-size: .84rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background .15s, color .15s, border-color .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--hover-bg);
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  &--active {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN CONTENT
+// ═════════════════════════════════════════════════════════════════════════════
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 860px) {
+  .header     { padding: 0 14px; }
+  .brand      { margin-right: 16px; }
+  .brand__text { display: none; }
+  .user-meta  { display: none; }
+  .main-tab__label { display: none; }
+  .main-tab   { gap: 0; }
+}

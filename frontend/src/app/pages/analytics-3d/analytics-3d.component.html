@@ -1,0 +1,115 @@
+<div class="page" *ngIf="!loading; else loadTpl">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Advanced Analytics</h1>
+      <p class="page-sub">Scatter · Model Comparison · Precision-Recall · Heatmap · Polar Rose · Boxplot</p>
+    </div>
+    <span class="gl-badge">6 Visualisations</span>
+  </div>
+
+  <!-- ══ Scatter: Fraud Risk Landscape ══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-badge">Scatter</span>
+      <h2>Fraud Risk Landscape</h2>
+    </div>
+    <p class="section-desc">
+      Each point = one transaction. <strong>X</strong> = log(Amount) ·
+      <strong>Y</strong> = Fraud Probability · <strong>Color</strong> = Channel.
+      Hover for amount, hour of day and fraud score.
+    </p>
+    <div class="chart-card chart-card--xl">
+      <app-chart [options]="scatter3dOpts" height="420px"></app-chart>
+    </div>
+  </div>
+
+  <!-- ══ Grouped Bar: Model Performance ════════════════════════════════ -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-badge section-badge--bar">Bar</span>
+      <h2>Model Performance Comparison</h2>
+    </div>
+    <p class="section-desc">
+      All classifiers × all 6 key metrics in one view. Color-coded by value:
+      <span style="color:#10b981">■ green = excellent</span> ·
+      <span style="color:#f59e0b">■ amber = fair</span> ·
+      <span style="color:#ef4444">■ red = poor</span>.
+    </p>
+    <div class="chart-card chart-card--xl">
+      <app-chart [options]="bar3dOpts" height="380px"></app-chart>
+    </div>
+  </div>
+
+  <!-- ══ Line: Precision-Recall-Threshold ══════════════════════════════ -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-badge section-badge--prt">P-R-T</span>
+      <h2>Precision · Recall · F1 vs Threshold</h2>
+    </div>
+    <p class="section-desc">
+      Move the alarm threshold and see how Precision, Recall, F1, and Alarm Rate change.
+      The <strong>dashed amber line</strong> is F1 — find its peak for the balanced operating point.
+    </p>
+    <div class="chart-card chart-card--xl">
+      <app-chart [options]="surface3dOpts" height="340px"></app-chart>
+    </div>
+  </div>
+
+  <!-- ══ Heatmap + Polar (side by side) ════════════════════════════════ -->
+  <div class="two-col">
+    <div class="section">
+      <div class="section-label">
+        <span class="section-badge section-badge--heat">🌡 Heat</span>
+        <h2>Fraud Risk Heatmap</h2>
+      </div>
+      <p class="section-desc">
+        Fraud rate by <strong>Hour of Day × Channel</strong>.
+        Dark red = highest risk band. Use this to focus ops monitoring.
+      </p>
+      <div class="chart-card">
+        <app-chart [options]="heatmapOpts" height="380px"></app-chart>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">
+        <span class="section-badge section-badge--polar">🌀 Polar</span>
+        <h2>Fraud by Day of Week</h2>
+      </div>
+      <p class="section-desc">
+        Polar rose — <strong style="color:#ef4444">KE</strong> +
+        <strong style="color:#f97316">NG</strong> fraud counts per day.
+        <strong style="color:#10b981">Green line</strong> = legit volume ÷ 10.
+      </p>
+      <div class="chart-card">
+        <app-chart [options]="polarOpts" height="380px"></app-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Boxplot: Amount by Channel ════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-badge section-badge--box">📦 Box</span>
+      <h2>Transaction Amount by Channel</h2>
+    </div>
+    <p class="section-desc">
+      Box = IQR (Q1–Q3) · Centre line = median · Whiskers = non-outlier range ·
+      Dots = outliers. Y-axis is <strong>log scale</strong>.
+      <span style="color:#ef4444">■ Red = Fraud</span> &nbsp;
+      <span style="color:#22c55e">■ Green = Legit</span>.
+      Amounts normalised to USD.
+    </p>
+    <div class="chart-card">
+      <app-chart [options]="boxplotOpts" height="420px"></app-chart>
+    </div>
+  </div>
+
+</div>
+<ng-template #loadTpl>
+  <div class="loading-page">
+    <div class="spinner-ring"></div>
+    <p>Building visualisations…</p>
+  </div>
+</ng-template>

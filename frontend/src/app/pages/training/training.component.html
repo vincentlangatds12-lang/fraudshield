@@ -1,0 +1,294 @@
+<div class="page">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">ML Pipeline & Training</h1>
+      <p class="page-sub">Run the full fraud detection pipeline, track experiments, and manage model versions.</p>
+    </div>
+  </div>
+
+  <!-- ── Tab bar ─────────────────────────────────────────────────────────── -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'pipeline'" (click)="setTab('pipeline')">
+      <span class="tab-icon">⚙️</span> ML Pipeline
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'mlflow'" (click)="setTab('mlflow')">
+      <span class="tab-icon">📊</span> MLflow Runs
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'versions'" (click)="setTab('versions')">
+      <span class="tab-icon">🏆</span> Model Versions
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       TAB 1 — ML PIPELINE
+  ════════════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'pipeline'" class="tab-content">
+
+    <div class="pipeline-layout">
+
+      <!-- Left: controls -->
+      <div class="pipeline-controls">
+
+        <!-- Step 1: Ingest -->
+        <div class="control-card">
+          <div class="control-card__header">
+            <span class="control-card__num">1</span>
+            <div>
+              <h3>Ingest Data</h3>
+              <p>Load <code>train.csv</code>, <code>test.csv</code>, and <code>identity.csv</code> into the database.</p>
+            </div>
+          </div>
+
+          <div class="ingest-status" *ngIf="dbCount > 0 || ingestDone">
+            <span class="badge badge--success">✓ {{ dbCount | number }} transactions in DB</span>
+          </div>
+          <div class="error-msg" *ngIf="ingestError">⚠ {{ ingestError }}</div>
+
+          <button class="btn btn--secondary"
+                  [disabled]="ingestRunning || pipelineRunning"
+                  (click)="ingestData()">
+            <span *ngIf="!ingestRunning">📥 Ingest Data</span>
+            <span *ngIf="ingestRunning" class="btn-spinner">⟳ Ingesting…</span>
+          </button>
+        </div>
+
+        <!-- Step 2: Run pipeline -->
+        <div class="control-card control-card--primary">
+          <div class="control-card__header">
+            <span class="control-card__num control-card__num--primary">2</span>
+            <div>
+              <h3>Run Full Pipeline</h3>
+              <p>Feature engineering → imbalance analysis → train all classifiers → MLflow → predictions.</p>
+            </div>
+          </div>
+
+          <div class="flaml-control">
+            <label>FLAML AutoML budget (seconds)</label>
+            <div class="flaml-input">
+              <input type="number" [(ngModel)]="flamlBudget" min="30" max="600" step="30"
+                     [disabled]="pipelineRunning" />
+              <span class="flaml-hint">{{ flamlBudget }}s · recommended: 120s</span>
+            </div>
+          </div>
+
+          <div class="success-msg" *ngIf="pipelineDone && !pipelineError">
+            ✓ Pipeline complete! Run ID: <code>{{ lastRunId | slice:0:8 }}…</code>
+            <br>Check <strong>Model Comparison</strong> and <strong>MLflow Runs</strong> for results.
+          </div>
+          <div class="error-msg" *ngIf="pipelineError">⚠ {{ pipelineError }}</div>
+
+          <div class="pipeline-actions">
+            <button class="btn btn--primary btn--large"
+                    [disabled]="pipelineRunning || ingestRunning || dbCount === 0"
+                    (click)="runPipeline()">
+              <span *ngIf="!pipelineRunning">🚀 Run Full Pipeline</span>
+              <span *ngIf="pipelineRunning" class="btn-spinner">⟳ Running…</span>
+            </button>
+            <span class="hint" *ngIf="dbCount === 0">Ingest data first before running the pipeline.</span>
+          </div>
+        </div>
+
+        <!-- What happens -->
+        <div class="info-card">
+          <h4>What the pipeline does (target AUC > 0.90)</h4>
+          <ul class="info-list">
+            <li><strong>Leakage guard</strong> — <code>flagged_for_review</code> excluded from all features</li>
+            <li><strong>20+ feature groups</strong> — velocity (1h/6h/24h/7d), smoothed target encoding, frequency, time-since-last, network, amount percentile rank, V*/C*/D* with PCA</li>
+            <li><strong>Logistic Regression</strong> — trained directly with sklearn (balanced weights)</li>
+            <li><strong>4 FLAML-tuned models</strong> — LightGBM · CatBoost · Random Forest · XGBoost · each 300s with <code>metric=recall</code></li>
+            <li><strong>Progressive saves</strong> — each model saved to DB immediately after training, champion updated in real-time</li>
+            <li><strong>Champion scoring</strong> — Recall (50%) + PR-AUC (20%) + AUC-ROC (20%) + F1 (10%)</li>
+            <li><strong>predictions.csv</strong> — auto-generated and updated by the best model</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right: pipeline steps visualiser -->
+      <div class="pipeline-steps">
+        <h3 class="steps-title">Pipeline Progress</h3>
+        <div class="steps-list">
+          <div class="step"
+               *ngFor="let step of steps"
+               [class.step--running]="step.status === 'running'"
+               [class.step--done]="step.status === 'done'"
+               [class.step--error]="step.status === 'error'">
+
+            <div class="step__icon">
+              <span *ngIf="step.status === 'pending'">{{ step.id }}</span>
+              <span *ngIf="step.status === 'running'" class="spin">⟳</span>
+              <span *ngIf="step.status === 'done'">✓</span>
+              <span *ngIf="step.status === 'error'">✗</span>
+            </div>
+
+            <div class="step__body">
+              <div class="step__label">{{ step.label }}</div>
+              <div class="step__detail">{{ step.detail }}</div>
+            </div>
+
+            <div class="step__bar" *ngIf="step.status === 'running'">
+              <div class="step__bar-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="steps-legend">
+          <span class="legend-item legend-item--pending">Pending</span>
+          <span class="legend-item legend-item--running">Running</span>
+          <span class="legend-item legend-item--done">Done</span>
+          <span class="legend-item legend-item--error">Error</span>
+        </div>
+      </div>
+
+    </div><!-- /pipeline-layout -->
+
+    <!-- CLI reference -->
+    <div class="cli-card">
+      <h4>🖥 CLI Alternative</h4>
+      <p>You can also trigger the pipeline from the command line:</p>
+      <pre class="code-block"><code># From fraud_detection/backend/
+uvicorn api.main:app --reload --port 8000
+
+# In a separate terminal:
+python pipeline/run_pipeline.py --data-dir ../../data --flaml-budget 120</code></pre>
+      <p>Output file: <code>backend/data/predictions.csv</code></p>
+    </div>
+
+  </div><!-- /pipeline tab -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       TAB 2 — MLFLOW RUNS
+  ════════════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'mlflow'" class="tab-content">
+
+    <div class="section-header">
+      <h2>MLflow Experiment Runs</h2>
+      <div class="header-actions">
+        <a *ngIf="mlflowUrl" [href]="'http://localhost:5000'" target="_blank" class="btn btn--outline">
+          🔗 Open MLflow UI
+        </a>
+        <button class="btn btn--secondary" (click)="loadMlflowRuns()" [disabled]="mlflowLoading">
+          <span *ngIf="!mlflowLoading">↻ Refresh</span>
+          <span *ngIf="mlflowLoading">Loading…</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!mlflowLoading && mlflowRuns.length === 0">
+      <div class="empty-icon">📊</div>
+      <p>No MLflow runs yet. Run the pipeline first.</p>
+      <button class="btn btn--primary" (click)="setTab('pipeline')">Go to Pipeline</button>
+    </div>
+
+    <div class="loading-state" *ngIf="mlflowLoading">
+      <div class="spinner-ring"></div>
+      <p>Loading runs…</p>
+    </div>
+
+    <div class="mlflow-table-wrap" *ngIf="!mlflowLoading && mlflowRuns.length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Run</th>
+            <th>Classifier</th>
+            <th>Strategy</th>
+            <th>Champion</th>
+            <th>AUC-ROC</th>
+            <th>PR-AUC</th>
+            <th>F1 (Fraud)</th>
+            <th>Accuracy</th>
+            <th>MCC</th>
+            <th>KS-Stat</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let run of mlflowRuns" [class.champion-row]="run.is_champion">
+            <td class="run-name">
+              <span class="run-id" title="{{ run.run_id }}">{{ run.run_id | slice:0:8 }}…</span>
+            </td>
+            <td><span class="clf-badge">{{ run.classifier }}</span></td>
+            <td><span class="strategy-badge">{{ run.strategy }}</span></td>
+            <td>
+              <span *ngIf="run.is_champion" class="champion-badge">⭐ Champion</span>
+              <span *ngIf="!run.is_champion" class="text-muted">—</span>
+            </td>
+            <td><span [class]="metricColor(run.metrics?.auc_roc || 0)">{{ (run.metrics?.auc_roc || 0) | number:'1.4-4' }}</span></td>
+            <td><span [class]="metricColor(run.metrics?.pr_auc || 0)">{{ (run.metrics?.pr_auc || 0) | number:'1.4-4' }}</span></td>
+            <td><span [class]="metricColor(run.metrics?.f1_fraud || 0)">{{ (run.metrics?.f1_fraud || 0) | number:'1.4-4' }}</span></td>
+            <td>{{ (run.metrics?.accuracy || 0) | number:'1.4-4' }}</td>
+            <td>{{ (run.metrics?.mcc || 0) | number:'1.4-4' }}</td>
+            <td>{{ (run.metrics?.ks_statistic || 0) | number:'1.4-4' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mlflow-hint">
+      <p>📌 To view full MLflow UI with charts and artifact browser, run:</p>
+      <pre class="code-block"><code>mlflow ui --backend-store-uri sqlite:///backend/data/mlflow.db --port 5000</code></pre>
+    </div>
+
+  </div><!-- /mlflow tab -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       TAB 3 — MODEL VERSIONS
+  ════════════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'versions'" class="tab-content">
+
+    <div class="section-header">
+      <h2>Model Version Registry</h2>
+      <button class="btn btn--secondary" (click)="loadModelVersions()" [disabled]="versionsLoading">
+        <span *ngIf="!versionsLoading">↻ Refresh</span>
+        <span *ngIf="versionsLoading">Loading…</span>
+      </button>
+    </div>
+
+    <div class="empty-state" *ngIf="!versionsLoading && modelVersions.length === 0">
+      <div class="empty-icon">🤖</div>
+      <p>No model versions yet. Run the pipeline to train models.</p>
+      <button class="btn btn--primary" (click)="setTab('pipeline')">Go to Pipeline</button>
+    </div>
+
+    <div class="loading-state" *ngIf="versionsLoading">
+      <div class="spinner-ring"></div><p>Loading versions…</p>
+    </div>
+
+    <div class="versions-grid" *ngIf="!versionsLoading && modelVersions.length > 0">
+      <div class="version-card"
+           *ngFor="let v of modelVersions"
+           [class.version-card--champion]="v.is_champion">
+
+        <div class="version-card__header">
+          <span class="clf-badge clf-badge--large">{{ v.classifier_name }}</span>
+          <span *ngIf="v.is_champion" class="champion-badge">⭐ Champion</span>
+        </div>
+
+        <div class="version-card__metrics">
+          <div class="vm">
+            <span class="vm__label">PR-AUC</span>
+            <span class="vm__value" [class]="metricColor(v.pr_auc)">{{ v.pr_auc | number:'1.4-4' }}</span>
+          </div>
+          <div class="vm">
+            <span class="vm__label">AUC-ROC</span>
+            <span class="vm__value" [class]="metricColor(v.auc_roc)">{{ v.auc_roc | number:'1.4-4' }}</span>
+          </div>
+          <div class="vm">
+            <span class="vm__label">F1 Fraud</span>
+            <span class="vm__value" [class]="metricColor(v.f1_fraud)">{{ v.f1_fraud | number:'1.4-4' }}</span>
+          </div>
+        </div>
+
+        <div class="version-card__meta">
+          <span>Strategy: <strong>{{ v.imbalance_strategy }}</strong></span>
+          <span>Trained: {{ v.trained_at | date:'MMM d, HH:mm' }}</span>
+          <span class="run-id-small">Run: {{ v.run_id | slice:0:8 }}…</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /versions tab -->
+
+</div><!-- /page -->

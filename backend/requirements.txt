@@ -1,0 +1,41 @@
+# Umba Fraud Detection Platform — Backend Dependencies
+# Python 3.11+
+
+# ── API ───────────────────────────────────────────────────────────────────────
+fastapi==0.115.0
+uvicorn[standard]==0.29.0
+pydantic==2.7.0
+python-multipart==0.0.9
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy==2.0.30
+python-dotenv==1.0.1
+# psycopg2-binary==2.9.9   # uncomment for PostgreSQL
+
+# ── ML core ──────────────────────────────────────────────────────────────────
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.4.2
+scipy==1.13.0
+joblib==1.4.2
+
+# ── Gradient boosting ────────────────────────────────────────────────────────
+lightgbm==4.3.0
+xgboost==2.0.3
+# catboost==1.2.5          # optional — slower install
+
+# ── AutoML ───────────────────────────────────────────────────────────────────
+flaml==2.1.2
+
+# ── Imbalance handling ───────────────────────────────────────────────────────
+imbalanced-learn==0.12.2
+
+# ── Explainability ───────────────────────────────────────────────────────────
+shap==0.45.0
+lime==0.2.0.1
+
+# ── Experiment tracking ──────────────────────────────────────────────────────
+mlflow==2.13.0

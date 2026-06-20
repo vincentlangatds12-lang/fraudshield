@@ -1,0 +1,65 @@
+<div class="page" *ngIf="!loading; else loadTpl">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Model Comparison</h1>
+      <p class="page-sub">All classifiers evaluated on 8 metrics — click column headers to sort</p>
+    </div>
+    <span class="badge badge--info">{{ models.length }} models trained</span>
+  </div>
+
+  <!-- Charts row -->
+  <div class="chart-row" *ngIf="models.length">
+    <div class="chart-card">
+      <h3 class="chart-card__title">📊 All Metrics by Classifier</h3>
+      <app-chart [options]="barOpts" height="320px"></app-chart>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-card__title">🕸 Radar: Top 4 Models</h3>
+      <app-chart [options]="radarOpts" height="320px"></app-chart>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card" *ngIf="models.length; else noData">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Strategy</th>
+            <th class="champion-col">Champion</th>
+            <th *ngFor="let m of metrics" class="sortable" (click)="sortBy(m.key)">
+              {{ m.label }}
+              <span *ngIf="sortCol === m.key">{{ sortDir === -1 ? '↓' : '↑' }}</span>
+            </th>
+            <th>Train Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of models" [class.champion-row]="m.is_champion">
+            <td><span class="clf-name">{{ m.classifier_name }}</span></td>
+            <td><span class="strategy-tag">{{ m.imbalance_strategy }}</span></td>
+            <td class="text-center">
+              <span *ngIf="m.is_champion" class="champion-star" title="Champion">⭐</span>
+            </td>
+            <td *ngFor="let met of metrics">
+              <span [class]="metricClass(m[met.key])">{{ (m[met.key] || 0) | number:'1.4-4' }}</span>
+            </td>
+            <td class="muted">{{ m.training_duration_s?.toFixed(1) }}s</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <ng-template #noData>
+    <div class="empty-state">
+      <div class="empty-icon">🤖</div>
+      <p>No models trained yet. Run the ML pipeline first.</p>
+    </div>
+  </ng-template>
+</div>
+
+<ng-template #loadTpl>
+  <div class="loading-page"><div class="spinner-ring"></div><p>Loading…</p></div>
+</ng-template>

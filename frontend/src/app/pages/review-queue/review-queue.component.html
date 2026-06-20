@@ -1,0 +1,171 @@
+<div class="page" *ngIf="!loading; else loadTpl">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Human-in-the-Loop Review</h1>
+      <p class="page-sub">Analyst review of uncertain model predictions (score 0.3–0.7)</p>
+    </div>
+    <button class="btn btn--secondary" (click)="populateQueue()" [disabled]="populatingQueue">
+      <span *ngIf="!populatingQueue">🔄 Refresh Queue</span>
+      <span *ngIf="populatingQueue" class="spin">⟳ Loading…</span>
+    </button>
+  </div>
+
+  <!-- KPI row -->
+  <div class="kpi-row">
+    <app-stat-card icon="🔍" label="Pending Review"   [value]="stats.pending || 0"         sub="Awaiting analyst decision" variant="warning"></app-stat-card>
+    <app-stat-card icon="✅" label="Reviewed"          [value]="stats.reviewed || 0"        sub="Decisions made"            variant="success"></app-stat-card>
+    <app-stat-card icon="🚨" label="Confirmed Fraud"  [value]="stats.confirmed_fraud || 0"  sub="Analyst verified"          variant="danger"></app-stat-card>
+    <app-stat-card icon="✔️" label="Cleared as Legit" [value]="stats.overridden_to_legit || 0" sub="Model overridden"       variant="info"></app-stat-card>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3 class="chart-card__title">📊 Analyst Decision Breakdown</h3>
+      <app-chart [options]="decisionsChartOpts" height="220px"></app-chart>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-card__title">📈 Score Histogram (Review Zone)</h3>
+      <p class="chart-card__sub">Distribution of fraud probabilities across all queued items</p>
+      <app-chart [options]="scoreHistOpts" height="220px"></app-chart>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab==='pending'"  (click)="activeTab='pending'">
+      🕐 Pending ({{ total }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='reviewed'" (click)="activeTab='reviewed'">
+      ✅ Reviewed ({{ totalReviewed }})
+    </button>
+  </div>
+
+  <!-- Pending table -->
+  <div class="table-card" *ngIf="activeTab==='pending'">
+    <div class="table-wrap" *ngIf="items.length; else noItems">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Transaction ID</th><th>Fraud Prob</th><th>Risk</th>
+            <th>Amount</th><th>Channel</th><th>Country</th><th>Card Type</th>
+            <th>Queued</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td class="mono">{{ item.transaction_id }}</td>
+            <td>
+              <div class="prob-wrap">
+                <div class="prob-bar" [style.width.%]="item.fraud_prob * 100" [class]="riskClass(item.fraud_prob)"></div>
+                <span class="prob-val" [class]="riskClass(item.fraud_prob)">{{ (item.fraud_prob * 100).toFixed(1) }}%</span>
+              </div>
+            </td>
+            <td><span class="risk-badge" [class]="riskClass(item.fraud_prob)">
+              {{ item.fraud_prob >= 0.7 ? 'HIGH' : item.fraud_prob >= 0.3 ? 'MED' : 'LOW' }}
+            </span></td>
+            <td>{{ item.transaction?.currency }} {{ (item.transaction?.amount || 0) | number:'1.0-0' }}</td>
+            <td><span class="chan-tag">{{ item.transaction?.channel || '—' }}</span></td>
+            <td>{{ item.transaction?.country || '—' }}</td>
+            <td>{{ item.transaction?.card_type || '—' }}</td>
+            <td class="muted">{{ item.created_at | date:'MMM d, HH:mm' }}</td>
+            <td>
+              <button class="btn btn--sm btn--primary" (click)="openDecision(item)">Review</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noItems>
+      <div class="empty-state">
+        <div class="empty-icon">🎉</div>
+        <p>No items pending review.</p>
+        <p class="muted">Run the pipeline to score transactions, then click "Refresh Queue".</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Reviewed table -->
+  <div class="table-card" *ngIf="activeTab==='reviewed'">
+    <div class="table-wrap" *ngIf="reviewed.length; else noReviewed">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Transaction ID</th><th>Fraud Prob</th>
+            <th>Amount</th><th>Channel</th><th>Country</th>
+            <th>Reviewed At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of reviewed">
+            <td class="mono">{{ item.transaction_id }}</td>
+            <td><span [class]="riskClass(item.fraud_prob)">{{ (item.fraud_prob * 100).toFixed(1) }}%</span></td>
+            <td>{{ item.transaction?.currency }} {{ (item.transaction?.amount || 0) | number:'1.0-0' }}</td>
+            <td><span class="chan-tag">{{ item.transaction?.channel || '—' }}</span></td>
+            <td>{{ item.transaction?.country || '—' }}</td>
+            <td class="muted">{{ item.reviewed_at | date:'MMM d, HH:mm' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noReviewed>
+      <div class="empty-state"><div class="empty-icon">📋</div><p>No reviewed items yet.</p></div>
+    </ng-template>
+  </div>
+
+</div>
+
+<!-- Decision modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal=false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <h3>Review Transaction #{{ selectedItem?.transaction_id }}</h3>
+      <button class="modal__close" (click)="showModal=false">✕</button>
+    </div>
+    <div class="modal__body">
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Fraud Probability</span>
+          <span class="detail-value" [class]="riskClass(selectedItem?.fraud_prob)">
+            {{ (selectedItem?.fraud_prob * 100 || 0).toFixed(2) }}%
+          </span>
+        </div>
+        <div class="detail-item"><span class="detail-label">Amount</span>
+          <span class="detail-value">{{ selectedItem?.transaction?.currency }} {{ selectedItem?.transaction?.amount | number:'1.0-0' }}</span>
+        </div>
+        <div class="detail-item"><span class="detail-label">Channel</span>
+          <span class="detail-value">{{ selectedItem?.transaction?.channel }}</span>
+        </div>
+        <div class="detail-item"><span class="detail-label">Country</span>
+          <span class="detail-value">{{ selectedItem?.transaction?.country }}</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Your Decision</label>
+        <div class="decision-btns">
+          <button class="dec-btn dec-btn--fraud"  [class.active]="decision==='confirmed_fraud'"  (click)="decision='confirmed_fraud'">🚨 Confirm Fraud</button>
+          <button class="dec-btn dec-btn--legit"  [class.active]="decision==='confirmed_legit'"  (click)="decision='confirmed_legit'">✅ Clear as Legit</button>
+          <button class="dec-btn dec-btn--unsure" [class.active]="decision==='uncertain'"        (click)="decision='uncertain'">❓ Uncertain</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Notes (optional)</label>
+        <textarea [(ngModel)]="analystNote" rows="3" placeholder="Add context or reasoning…" class="notes-input"></textarea>
+      </div>
+
+      <div class="submit-row">
+        <div class="error-msg" *ngIf="submitMsg && !submitting">{{ submitMsg }}</div>
+        <button class="btn btn--primary" (click)="submitDecision()" [disabled]="submitting">
+          <span *ngIf="!submitting">Submit Decision</span>
+          <span *ngIf="submitting" class="spin">⟳</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadTpl>
+  <div class="loading-page"><div class="spinner-ring"></div><p>Loading review queue…</p></div>
+</ng-template>

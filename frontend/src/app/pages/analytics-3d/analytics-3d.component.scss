@@ -1,0 +1,109 @@
+.page { }
+
+.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; }
+.page-title  { font-size:1.6rem; font-weight:700; color:var(--text); margin:0 0 4px; }
+.page-sub    { color:var(--text-muted); font-size:.9rem; margin:0; }
+
+.gl-badge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #1e40af, #7c3aed);
+  color: #fff;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 99px;
+  letter-spacing: .04em;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+// Section wrapper
+.section { margin-bottom: 36px; }
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  h2 { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text); }
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e40af, #7c3aed);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  padding: 3px 10px;
+  border-radius: 99px;
+  min-width: 32px;
+  text-transform: uppercase;
+
+  &--heat  { background: linear-gradient(135deg, #dc2626, #f97316); }
+  &--polar { background: linear-gradient(135deg, #7c3aed, #db2777); }
+  &--box   { background: linear-gradient(135deg, #065f46, #0284c7); }
+  &--bar   { background: linear-gradient(135deg, #0369a1, #0891b2); }
+  &--prt   { background: linear-gradient(135deg, #7c3aed, #2563eb); }
+}
+
+.section-desc {
+  font-size: .84rem;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+  max-width: 860px;
+  line-height: 1.6;
+
+  strong { color: var(--text); }
+}
+
+// Chart cards
+.chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  overflow: hidden;
+  transition: box-shadow .2s;
+
+  &:hover { box-shadow: 0 6px 24px rgba(0,0,0,.1); }
+
+  &--xl   { /* full width */ }
+  &--wide { /* full width */ }
+}
+
+// Two-column layout for heatmap + polar
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 0;
+
+  @media (max-width: 1100px) { grid-template-columns: 1fr; }
+}
+
+// Loading
+.loading-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  color: var(--text-muted);
+}
+
+.spinner-ring {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

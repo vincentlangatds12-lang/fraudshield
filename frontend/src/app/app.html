@@ -1,0 +1,83 @@
+<!-- ── Login ─────────────────────────────────────────────────────────────── -->
+<ng-container *ngIf="!showShell">
+  <router-outlet />
+</ng-container>
+
+<!-- ── App shell ────────────────────────────────────────────────────────── -->
+<div class="shell" *ngIf="showShell">
+
+  <!-- ═══════════════════════ HEADER ═══════════════════════ -->
+  <header class="header">
+
+    <!-- Brand -->
+    <a class="brand" routerLink="/dashboard">
+      <img src="/umba-logo.png" class="brand__logo" alt="Umba" />
+      <div class="brand__text">
+        <span class="brand__name">FraudShield</span>
+        <span class="brand__by">by Umba</span>
+      </div>
+    </a>
+
+    <!-- ── 4 main tabs ── -->
+    <nav class="main-tabs">
+      <button *ngFor="let group of navGroups"
+              class="main-tab"
+              [class.main-tab--active]="isGroupActive(group)"
+              (click)="router.navigate([group.primary])">
+        <span class="main-tab__icon">{{ group.icon }}</span>
+        <span class="main-tab__label">{{ group.label }}</span>
+      </button>
+    </nav>
+
+    <!-- ── Right controls ── -->
+    <div class="header-right">
+      <!-- Theme toggle -->
+      <button class="icon-btn" (click)="theme.toggle()"
+              [title]="theme.isDark() ? 'Light mode' : 'Dark mode'">
+        {{ theme.isDark() ? '☀️' : '🌙' }}
+      </button>
+
+      <!-- User -->
+      <div class="user-wrap">
+        <button class="user-btn" (click)="toggleUserMenu()">
+          <span class="avatar">{{ userInitial }}</span>
+          <div class="user-meta">
+            <span class="user-meta__name">{{ userName }}</span>
+            <span class="user-meta__role">{{ userRole }}</span>
+          </div>
+          <span class="chevron" [class.open]="userMenuOpen()">▾</span>
+        </button>
+
+        <div class="user-menu" *ngIf="userMenuOpen()">
+          <div class="user-menu__profile">
+            <span class="avatar avatar--lg">{{ userInitial }}</span>
+            <div>
+              <div class="user-menu__name">{{ userName }}</div>
+              <div class="user-menu__role">{{ userRole }}</div>
+            </div>
+          </div>
+          <div class="user-menu__divider"></div>
+          <button class="user-menu__item" (click)="logout()">
+            <span>↩</span> Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════ SUB-NAV (tab pills) ═══════════════════════ -->
+  <div class="subnav" *ngIf="hasSubNav">
+    <a *ngFor="let sub of getSubNav()"
+       class="subnav-pill"
+       [routerLink]="sub.path"
+       routerLinkActive="subnav-pill--active">
+      {{ sub.label }}
+    </a>
+  </div>
+
+  <!-- ═══════════════════════ PAGE CONTENT ═══════════════════════ -->
+  <main class="main-content">
+    <router-outlet />
+  </main>
+
+</div>

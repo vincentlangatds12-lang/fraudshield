@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.pyc
+
+# ML artifacts (large files — not in git)
+backend/models/*.pkl
+backend/models/*.joblib
+backend/data/*.db
+backend/data/*.db-journal
+backend/data/mlflow.db
+backend/data/predictions.csv
+backend/data/champion_cv*.csv
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Environment
+backend/.env
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Notebooks checkpoints
+**/.ipynb_checkpoints/
+
+# Logs
+*.log

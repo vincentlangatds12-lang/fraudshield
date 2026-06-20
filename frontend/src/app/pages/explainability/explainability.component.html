@@ -1,0 +1,111 @@
+<div class="page" *ngIf="!loading; else loadTpl">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Explainability</h1>
+      <p class="page-sub">Feature Importance · SHAP Global &amp; Local · LIME per-transaction</p>
+    </div>
+  </div>
+
+  <!-- ── Tab bar ─────────────────────────────────────────────────────────── -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab==='fi'"   (click)="setTab('fi')">  📊 Feature Importance</button>
+    <button class="tab-btn" [class.active]="activeTab==='shap'" (click)="setTab('shap')">🔢 SHAP Global</button>
+    <button class="tab-btn" [class.active]="activeTab==='lime'" (click)="setTab('lime')">🔍 SHAP &amp; LIME per Transaction</button>
+  </div>
+
+  <!-- ════ TAB: Feature Importance ════ -->
+  <div *ngIf="activeTab === 'fi'" class="tab-content">
+    <div class="chart-card" *ngIf="featureImportance.length; else noFi">
+      <h3 class="chart-card__title">Top 20 Features — Model-Native Importance</h3>
+      <p class="chart-card__sub">Derived from champion model's built-in feature importance (tree-based gain or LR coefficients)</p>
+      <app-chart [options]="fiChartOpts" height="500px"></app-chart>
+    </div>
+    <div class="feature-table" *ngIf="featureImportance.length">
+      <table class="data-table">
+        <thead><tr><th>Rank</th><th>Feature</th><th>Importance</th><th>Relative</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let f of featureImportance">
+            <td class="rank">#{{ f.rank }}</td>
+            <td class="feat-name">{{ f.feature }}</td>
+            <td>{{ (f.importance || 0) | number:'1.6-6' }}</td>
+            <td>
+              <div class="rel-bar-wrap">
+                <div class="rel-bar" [style.width.%]="(f.importance / maxFi) * 100"></div>
+                <span>{{ ((f.importance / maxFi) * 100).toFixed(1) }}%</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noFi>
+      <div class="empty-state"><div class="empty-icon">📊</div><p>No feature importance available. Run the pipeline first.</p></div>
+    </ng-template>
+  </div>
+
+  <!-- ════ TAB: SHAP Global ════ -->
+  <div *ngIf="activeTab === 'shap'" class="tab-content">
+    <div class="info-box">
+      <strong>What is SHAP?</strong> SHAP (SHapley Additive exPlanations) assigns each feature a value representing its contribution to predictions. Mean |SHAP| shows the average impact magnitude across all samples.
+    </div>
+    <div class="chart-card" *ngIf="shapGlobal.length; else noShap">
+      <h3 class="chart-card__title">Global SHAP Summary — Mean |SHAP| per Feature</h3>
+      <p class="chart-card__sub">Higher = more influential on fraud probability. Computed on validation set sample.</p>
+      <app-chart [options]="shapChartOpts" height="500px"></app-chart>
+    </div>
+    <ng-template #noShap>
+      <div class="empty-state"><div class="empty-icon">🔢</div><p>SHAP values not computed yet. Run the pipeline to generate them.</p></div>
+    </ng-template>
+  </div>
+
+  <!-- ════ TAB: SHAP & LIME per transaction ════ -->
+  <div *ngIf="activeTab === 'lime'" class="tab-content">
+    <div class="info-box">
+      <strong>Per-Transaction Explainability</strong> — Enter a Transaction ID to see:
+      <br>• <strong>SHAP waterfall</strong>: which features pushed the score up (red) or down (green)
+      <br>• <strong>LIME</strong>: locally-fitted linear approximation of the model decision
+    </div>
+
+    <div class="txn-search">
+      <input type="number" [(ngModel)]="txnId" placeholder="Enter Transaction ID…" class="txn-input" />
+      <button class="btn btn--primary" [disabled]="!txnId || txnLoading" (click)="loadTxnExplanation()">
+        <span *ngIf="!txnLoading">Explain</span>
+        <span *ngIf="txnLoading" class="spin">⟳</span>
+      </button>
+    </div>
+
+    <div class="expl-grid" *ngIf="shapLocalOpts.series || limeOpts.series">
+      <div class="chart-card">
+        <h3 class="chart-card__title">SHAP Waterfall — Transaction {{ txnId }}</h3>
+        <p class="chart-card__sub">
+          Base value: {{ shapLocal?.base_value?.toFixed(4) || '—' }} →
+          Predicted: {{ shapLocal?.predicted_prob?.toFixed(4) || '—' }}
+        </p>
+        <app-chart [options]="shapLocalOpts" height="380px"></app-chart>
+      </div>
+      <div class="chart-card">
+        <h3 class="chart-card__title">LIME Explanation — Transaction {{ txnId }}</h3>
+        <p class="chart-card__sub">Orange = pushes toward fraud · Teal = pushes away from fraud</p>
+        <app-chart [options]="limeOpts" height="380px"></app-chart>
+      </div>
+    </div>
+
+    <div class="lime-table" *ngIf="limeLocal.length">
+      <h3>LIME Feature Weights</h3>
+      <table class="data-table">
+        <thead><tr><th>Feature</th><th>Weight</th><th>Direction</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let l of limeLocal">
+            <td class="feat-name">{{ l.feature }}</td>
+            <td [class]="l.positive ? 'fraud-weight' : 'legit-weight'">{{ l.weight | number:'1.4-4' }}</td>
+            <td><span class="dir-tag" [class.dir-tag--fraud]="l.positive">{{ l.positive ? '↑ Fraud' : '↓ Legit' }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+<ng-template #loadTpl>
+  <div class="loading-page"><div class="spinner-ring"></div><p>Loading…</p></div>
+</ng-template>

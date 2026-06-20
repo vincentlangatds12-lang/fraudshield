@@ -1,0 +1,5 @@
+// Shared page layout mixins
+.page { padding: 28px 32px; max-width: 1400px; }
+.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.page-title  { font-size:1.6rem; font-weight:700; color:var(--text); margin:0 0 4px; }
+.page-sub    { color:var(--text-muted); font-size:.9rem; margin:0; }

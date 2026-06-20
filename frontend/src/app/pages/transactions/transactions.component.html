@@ -1,0 +1,95 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Transaction Explorer</h1>
+      <p class="page-sub">{{ total | number }} transactions · filter, sort and inspect</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <select [(ngModel)]="filterSplit" class="filter-select">
+      <option value="">All Splits</option>
+      <option value="train">Train</option>
+      <option value="test">Test</option>
+    </select>
+    <select [(ngModel)]="filterChannel" class="filter-select">
+      <option *ngFor="let c of channels" [value]="c">{{ c || 'All Channels' }}</option>
+    </select>
+    <select [(ngModel)]="filterCountry" class="filter-select">
+      <option *ngFor="let c of countries" [value]="c">{{ c || 'All Countries' }}</option>
+    </select>
+    <select [(ngModel)]="filterFraud" class="filter-select">
+      <option value="">All Labels</option>
+      <option value="1">Fraud Only</option>
+      <option value="0">Legit Only</option>
+    </select>
+    <input type="number" [(ngModel)]="filterMinProb" placeholder="Min Score (0-1)"
+           step="0.1" min="0" max="1" class="filter-input" />
+    <button class="btn btn--primary" (click)="applyFilters()">Apply</button>
+    <button class="btn btn--secondary" (click)="clearFilters()">Clear</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table class="data-table" *ngIf="!loading && items.length; else fallback">
+        <thead>
+          <tr>
+            <th>ID</th><th>Split</th><th>Amount</th><th>Currency</th>
+            <th>Channel</th><th>Country</th><th>Card Type</th><th>Card Bank</th>
+            <th>Score</th><th>Alarm</th><th>Label</th><th>Review</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of items">
+            <td class="mono">{{ t.transaction_id }}</td>
+            <td><span class="split-tag" [class.split-tag--test]="t.split==='test'">{{ t.split }}</span></td>
+            <td class="amount">{{ (t.amount || 0) | number:'1.0-0' }}</td>
+            <td class="muted">{{ t.currency }}</td>
+            <td><span class="chan-tag">{{ t.channel }}</span></td>
+            <td>{{ t.country }}</td>
+            <td class="muted">{{ t.card_type }}</td>
+            <td class="muted small">{{ t.card_bank }}</td>
+            <td>
+              <span *ngIf="t.fraud_prob !== null" [class]="riskClass(t.fraud_prob)" class="score-val">
+                {{ (t.fraud_prob * 100).toFixed(1) }}%
+              </span>
+              <span *ngIf="t.fraud_prob === null" class="muted">—</span>
+            </td>
+            <td>
+              <span *ngIf="t.is_alarm === true"  class="pill pill--alarm">🚨 YES</span>
+              <span *ngIf="t.is_alarm === false" class="pill">—</span>
+              <span *ngIf="t.is_alarm === null"  class="muted">—</span>
+            </td>
+            <td>
+              <span *ngIf="t.is_fraud === 1" class="pill pill--fraud">Fraud</span>
+              <span *ngIf="t.is_fraud === 0" class="pill pill--legit">Legit</span>
+              <span *ngIf="t.is_fraud === null" class="muted">—</span>
+            </td>
+            <td>
+              <span *ngIf="t.in_review" class="pill pill--review">In Review</span>
+              <span *ngIf="!t.in_review" class="muted">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ng-template #fallback>
+        <div class="loading-state" *ngIf="loading"><div class="spinner-ring"></div><p>Loading…</p></div>
+        <div class="empty-state" *ngIf="!loading && !items.length">
+          <div class="empty-icon">💳</div>
+          <p>No transactions found. Run the pipeline to ingest data.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="total > pageSize">
+      <button class="pag-btn" (click)="prevPage()" [disabled]="page === 1">‹ Prev</button>
+      <button class="pag-btn" *ngFor="let p of pageRange"
+              [class.active]="p === page" (click)="goPage(p)">{{ p }}</button>
+      <button class="pag-btn" (click)="nextPage()" [disabled]="page === totalPages">Next ›</button>
+      <span class="pag-info">Page {{ page }} / {{ totalPages }} · {{ total | number }} rows</span>
+    </div>
+  </div>
+</div>

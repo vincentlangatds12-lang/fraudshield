@@ -1,0 +1,302 @@
+<div class="dashboard" *ngIf="!loading; else loadTpl">
+
+  <!-- ── Header ────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Fraud Detection Dashboard</h1>
+      <p class="page-sub">Real-time monitoring · Kenya &amp; Nigeria</p>
+    </div>
+    <span class="badge badge--success" *ngIf="summary.champion_classifier">
+      Champion: {{ summary.champion_classifier }}
+    </span>
+  </div>
+
+  <!-- ══ HERO METRIC — Frauds Caught ════════════════════════════════════ -->
+  <div class="hero-metric">
+    <div class="hero-metric__ring">
+      <svg viewBox="0 0 120 120" class="hero-ring-svg">
+        <defs>
+          <linearGradient id="fraudGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#10b981"/>
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r="50" class="hero-ring-bg"/>
+        <circle cx="60" cy="60" r="50" class="hero-ring-fill"
+                [style.stroke-dashoffset]="recallDashOffset"></circle>
+      </svg>
+      <div class="hero-metric__inner">
+        <div class="hero-metric__pct">{{ recallPct }}</div>
+        <div class="hero-metric__label">Frauds Caught</div>
+      </div>
+    </div>
+
+    <div class="hero-metric__details">
+      <h2 class="hero-metric__title">
+        🎯 Fraud Detection Rate (Recall)
+      </h2>
+      <p class="hero-metric__desc">
+        The model correctly identifies <strong>{{ recallPct }}</strong> of all real fraud cases
+        in the validation set. This is <em>Recall</em> on the fraud class —
+        the primary operational metric. Every missed fraud is a real financial loss.
+      </p>
+      <div class="hero-metric__stats">
+        <div class="hero-stat">
+          <span class="hero-stat__val">{{ summary.champion_pr_auc ? (summary.champion_pr_auc | number:'1.4-4') : '—' }}</span>
+          <span class="hero-stat__lbl">PR-AUC</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat__val">{{ summary.champion_auc_roc ? (summary.champion_auc_roc | number:'1.4-4') : '—' }}</span>
+          <span class="hero-stat__lbl">AUC-ROC</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat__val">{{ summary.champion_f1 ? (summary.champion_f1 | number:'1.4-4') : '—' }}</span>
+          <span class="hero-stat__lbl">F1 Score</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat__val">{{ summary.champion_precision ? (summary.champion_precision | number:'1.4-4') : '—' }}</span>
+          <span class="hero-stat__lbl">Precision</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat__val">{{ summary.champion_classifier || '—' }}</span>
+          <span class="hero-stat__lbl">Champion Model</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ONE ROW — 5 KPI cards ══════════════════════════════════════════ -->
+  <div class="kpi-row">
+
+    <!-- 1. Transactions -->
+    <div class="kpi-card kpi-card--info">
+      <div class="kpi-card__icon">💳</div>
+      <div class="kpi-card__body">
+        <div class="kpi-card__label">Transactions</div>
+        <div class="kpi-card__value">{{ (summary.total_transactions || 0) | number }}</div>
+        <div class="kpi-card__sub">
+          <span class="kpi-tag">Train {{ (summary.total_train || 0) | number }}</span>
+          <span class="kpi-tag">Test {{ (summary.total_test || 0) | number }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Fraud Rate -->
+    <div class="kpi-card kpi-card--danger">
+      <div class="kpi-card__icon">🚨</div>
+      <div class="kpi-card__body">
+        <div class="kpi-card__label">Fraud Rate</div>
+        <div class="kpi-card__value">{{ (summary.fraud_pct || 0).toFixed(2) }}%</div>
+        <div class="kpi-card__sub">{{ summary.total_fraud_train || 0 }} confirmed fraud cases</div>
+      </div>
+      <span class="kpi-badge" [class.kpi-badge--danger]="(summary.fraud_pct||0) > 5"
+            [class.kpi-badge--ok]="(summary.fraud_pct||0) <= 5">
+        {{ (summary.fraud_pct || 0) > 5 ? 'High' : 'Normal' }}
+      </span>
+    </div>
+
+    <!-- 3. Champion Model -->
+    <div class="kpi-card kpi-card--success">
+      <div class="kpi-card__icon">🏆</div>
+      <div class="kpi-card__body">
+        <div class="kpi-card__label">Champion Model</div>
+        <div class="kpi-card__value kpi-card__value--md">
+          {{ summary.champion_classifier || '—' }}
+        </div>
+        <div class="kpi-card__sub">
+          PR-AUC:
+          <strong>{{ summary.champion_pr_auc ? summary.champion_pr_auc.toFixed(4) : '—' }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Model Performance -->
+    <div class="kpi-card kpi-card--info">
+      <div class="kpi-card__icon">📈</div>
+      <div class="kpi-card__body">
+        <div class="kpi-card__label">Model Performance</div>
+        <div class="kpi-card__metrics">
+          <div class="kpi-metric">
+            <span class="kpi-metric__val">{{ summary.champion_auc_roc ? summary.champion_auc_roc.toFixed(3) : '—' }}</span>
+            <span class="kpi-metric__lbl">AUC-ROC</span>
+          </div>
+          <div class="kpi-metric">
+            <span class="kpi-metric__val">{{ summary.champion_f1 ? summary.champion_f1.toFixed(3) : '—' }}</span>
+            <span class="kpi-metric__lbl">F1</span>
+          </div>
+          <div class="kpi-metric">
+            <span class="kpi-metric__val">{{ summary.champion_ks ? summary.champion_ks.toFixed(3) : '—' }}</span>
+            <span class="kpi-metric__lbl">KS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Ops Status -->
+    <div class="kpi-card kpi-card--warning">
+      <div class="kpi-card__icon">⚡</div>
+      <div class="kpi-card__body">
+        <div class="kpi-card__label">Ops Status</div>
+        <div class="kpi-card__metrics">
+          <div class="kpi-metric">
+            <span class="kpi-metric__val">{{ reviewStats.pending || 0 }}</span>
+            <span class="kpi-metric__lbl">Queue</span>
+          </div>
+          <div class="kpi-metric">
+            <span class="kpi-metric__val">{{ reviewStats.confirmed_fraud || 0 }}</span>
+            <span class="kpi-metric__lbl">Confirmed</span>
+          </div>
+          <div class="kpi-metric">
+            <span class="kpi-metric__val">{{ (imbalanceReport.imbalance_ratio || 0).toFixed(0) }}:1</span>
+            <span class="kpi-metric__lbl">Imbalance</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /kpi-row -->
+
+  <!-- ══ MODEL COMPARISON TABLE ════════════════════════════════════════ -->
+  <div class="table-card" *ngIf="modelComparison.length">
+    <div class="table-card__header">
+      <h3>🏆 Model Comparison — All Trained Models</h3>
+      <a routerLink="/model-comparison" class="view-all-link">View full comparison →</a>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Strategy</th>
+            <th>Champion</th>
+            <th>Composite ↓</th>
+            <th>Recall</th>
+            <th>AUC-ROC</th>
+            <th>PR-AUC</th>
+            <th>F1</th>
+            <th>Precision</th>
+            <th>Accuracy</th>
+            <th>KS-Stat</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of modelComparison | slice:0:10"
+              [class.champion-row]="m.is_champion">
+            <td><span class="clf-name">{{ m.classifier_name }}</span></td>
+            <td><span class="strat-tag">{{ m.imbalance_strategy }}</span></td>
+            <td class="text-center">
+              <span *ngIf="m.is_champion" title="Champion model">⭐</span>
+            </td>
+            <td><strong [class]="metricClass(compositeScore(m))">{{ compositeScore(m) | number:'1.4-4' }}</strong></td>
+            <td><span [class]="metricClass(m.recall_fraud)">{{ (m.recall_fraud || 0) | number:'1.4-4' }}</span></td>
+            <td><span [class]="metricClass(m.auc_roc)">{{ (m.auc_roc || 0) | number:'1.4-4' }}</span></td>
+            <td><span [class]="metricClass(m.pr_auc)">{{ (m.pr_auc || 0) | number:'1.4-4' }}</span></td>
+            <td><span [class]="metricClass(m.f1_fraud)">{{ (m.f1_fraud || 0) | number:'1.4-4' }}</span></td>
+            <td>{{ (m.precision_fraud || 0) | number:'1.4-4' }}</td>
+            <td>{{ (m.accuracy || 0) | number:'1.4-4' }}</td>
+            <td>{{ (m.ks_statistic || 0) | number:'1.4-4' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ ROW 2 — Trend (wide) + Score dist ══════════════════════════════ -->
+  <div class="chart-row chart-row--65-35">
+    <div class="chart-card">
+      <h3 class="chart-card__title">📉 Fraud Volume Over Time</h3>
+      <p class="chart-card__sub">Transaction buckets across the training period</p>
+      <app-chart [options]="trendChartOpts" height="230px"></app-chart>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-card__title">📊 Score Distribution</h3>
+      <p class="chart-card__sub">Fraud probability histogram</p>
+      <app-chart [options]="scoreChartOpts" height="230px"></app-chart>
+    </div>
+  </div>
+
+  <!-- ══ ROW 3 — 3 equal charts ══════════════════════════════════════════ -->
+  <div class="chart-row chart-row--3">
+    <div class="chart-card">
+      <h3 class="chart-card__title">📡 Fraud by Channel</h3>
+      <p class="chart-card__sub">Fraud rate (bars) · volume (line)</p>
+      <app-chart [options]="channelChartOpts" height="210px"></app-chart>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-card__title">🌍 Fraud by Country</h3>
+      <p class="chart-card__sub">Kenya vs Nigeria</p>
+      <app-chart [options]="countryChartOpts" height="210px"></app-chart>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-card__title">⚖️ Class Imbalance</h3>
+      <p class="chart-card__sub">Fraud vs legit split</p>
+      <app-chart [options]="imbalanceChartOpts" height="210px"></app-chart>
+    </div>
+  </div>
+
+  <!-- ══ ROW 4 — Amount dist + PR Curve ═════════════════════════════════ -->
+  <div class="chart-row chart-row--50-50">
+    <div class="chart-card">
+      <h3 class="chart-card__title">💰 Amount Distribution</h3>
+      <p class="chart-card__sub">Fraud vs legit by amount (log scale)</p>
+      <app-chart [options]="amountChartOpts" height="210px"></app-chart>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-card__title">📐 Precision-Recall Curve</h3>
+      <p class="chart-card__sub">Champion · PR-AUC:
+        {{ summary.champion_pr_auc ? (summary.champion_pr_auc | number:'1.4-4') : '—' }}
+      </p>
+      <app-chart [options]="prChartOpts" height="210px"></app-chart>
+    </div>
+  </div>
+
+  <!-- ══ ROW 5 — Top flagged ══════════════════════════════════════════════ -->
+  <div class="table-card">
+    <div class="table-card__header">
+      <h3>🚨 Top Flagged Transactions</h3>
+      <span class="badge badge--danger">Highest risk scores</span>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" *ngIf="topFlagged.length; else noData">
+        <thead>
+          <tr>
+            <th>ID</th><th>Fraud Prob</th><th>Alarm</th>
+            <th>Amount</th><th>Channel</th><th>Country</th>
+            <th>Card Type</th><th>Label</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of topFlagged">
+            <td class="mono">{{ t.transaction_id }}</td>
+            <td>
+              <div class="prob-bar-wrap">
+                <div class="prob-bar" [style.width.%]="t.fraud_prob * 100" [class]="riskClass(t.fraud_prob)"></div>
+                <span [class]="riskClass(t.fraud_prob)">{{ (t.fraud_prob * 100).toFixed(1) }}%</span>
+              </div>
+            </td>
+            <td><span class="status-pill" [class.status-pill--alarm]="t.is_alarm">{{ t.is_alarm ? '🚨 YES' : '—' }}</span></td>
+            <td>{{ t.currency }} {{ (t.amount || 0) | number:'1.0-0' }}</td>
+            <td><span class="chan-tag">{{ t.channel }}</span></td>
+            <td>{{ t.country }}</td>
+            <td>{{ t.card_type }}</td>
+            <td>
+              <span *ngIf="t.actual_fraud === 1" class="badge badge--danger">Fraud</span>
+              <span *ngIf="t.actual_fraud === 0" class="badge badge--success">Legit</span>
+              <span *ngIf="t.actual_fraud === null" class="badge badge--info">Test</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ng-template #noData>
+        <p class="no-data">No predictions yet — run the pipeline first.</p>
+      </ng-template>
+    </div>
+  </div>
+
+</div>
+
+<ng-template #loadTpl>
+  <div class="loading-page">
+    <div class="spinner-ring"></div><p>Loading dashboard…</p>
+  </div>
+</ng-template>
