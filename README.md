@@ -1,165 +1,206 @@
-# Umba — Take-Home Assessment: Real-Time Fraud Detection
+# FraudShield — Umba Fraud Detection Platform
 
-Welcome, and thanks for taking the time. This exercise mirrors the kind of work
-you'd actually do on our team: take messy, real-world financial data, build a
-model that drives a live decision, stand it up behind an API, and make the
-results legible to non-technical colleagues — end to end, owning the whole loop.
-
-We care far more about **judgment, rigour, and a working v1** than about polish
-or completeness. Read the whole brief before you start.
+**Live Dashboard:** https://fraudshield-ui.onrender.com
+**API:** https://fraudshield-5.onrender.com/api/docs
 
 ---
 
-## The scenario
+## Quick Start (local)
 
-Umba processes mobile-money, card, and bank-transfer transactions across Kenya
-and Nigeria. A small fraction are fraudulent. When a transaction is fraudulent,
-we want to **raise an alarm** so the back-office team can hold and review it
-before money moves.
+```bash
+# 1. Clone
+git clone https://github.com/vincentlangatds12-lang/fraudshield.git
+cd fraudshield
 
-You're building the **v1 of that fraud-detection system**: the model, the
-service that scores transactions, and a dashboard the operations team can look
-at. This is a binary classification problem:
+# 2. Backend
+cd backend
+pip install -r requirements.txt
+cp .env.example .env          # edit DB_MODE, SESSION_SECRET_KEY as needed
 
-- `isFraud = 1` → fraud → should trigger an alarm
-- `isFraud = 0` → legitimate
+# 3. Run pipeline (trains all models, generates predictions.csv)
+python pipeline/run_pipeline.py
 
-Fraud is **rare** (a few percent), the data is **messy real-world transaction
-data**, and the transactions you'll be scored on happen **later in time** than
-the ones you train on — just like production.
+# 4. Start API
+uvicorn api.main:app --reload --port 8000
 
----
-
-## Time budget
-
-**Aim for ~4–6 hours.** This is deliberately more than you can perfectly finish
-in that window. We want to see how you **prioritise** under a realistic
-constraint. A focused, correct, well-explained v1 beats a sprawling,
-half-working v3. If you run out of time, write down what you'd do next.
-
-You may use **any** language, libraries, and tools.
-
----
-
-## Using AI tools — encouraged
-
-This is an **AI-native** role. We use Claude Code, Codex, and similar tools
-every day, and we expect you to. **Using them here is encouraged, not
-penalised.**
-
-What we're actually assessing is your **judgment and review**: AI will happily
-generate a pipeline that runs clean, passes a smoke test, and is quietly wrong.
-Your job is to catch that. **You own every line you submit and should be able to
-explain and defend it.** A short note on how you used AI (what you delegated,
-what you caught, what you rejected) is welcome.
-
----
-
-## What's in the box
-
-```
-data/
-  train.csv              labelled transactions (has isFraud)        — train on this
-  test.csv               later-period transactions (no isFraud)     — score these
-  identity.csv           device/session feed, joins on TransactionID
-  sample_submission.csv  the exact format we expect for predictions
-DATA_DICTIONARY.md       what every column means — read it carefully
-requirements.txt         a suggested Python environment (optional to use)
+# 5. Frontend (separate terminal)
+cd ../frontend
+npm install --legacy-peer-deps
+npm run build -- --configuration production
+# or for dev: npm start
 ```
 
-There's no starter code — you build the pipeline, service, and dashboard from
-scratch, structured however you see fit.
-
-This is **anonymised transaction data** with all the warts you'd expect in
-production: class imbalance, missing values, two currencies, a separate identity
-feed, and fields that exist for analysis but aren't all available at decision
-time. **Verifying data integrity is part of the job, not a distraction from it.**
+The API will be at `http://localhost:8000/api/docs`.
 
 ---
 
-## What to build
+## Repository Structure
 
-### Part A — Pipeline & model · *required, weighted most heavily*
-A **reproducible** pipeline that goes from the raw CSVs to a trained classifier:
-preprocessing, feature engineering, training, and **honest evaluation**. Then
-score `test.csv` and produce a `predictions.csv` (format below).
-
-We're looking for sound handling of **class imbalance**, an **evaluation setup
-that reflects how the model will really be used**, and **awareness of leakage
-and data-integrity pitfalls**. A short write-up of your choices, your metrics,
-and what you'd improve with more time is required.
-
-### Part B — Serving API · *required*
-A small service (e.g. FastAPI/Flask) that loads your trained model and exposes a
-`/predict` endpoint: given a transaction (or a batch), return a fraud
-probability and an alarm decision. Keep it minimal but real — input validation,
-a health check, and a sensible response shape.
-
-### Part C — Dashboard · *required, keep it simple*
-A simple frontend (Streamlit, a small React/HTML page, a notebook-as-dashboard —
-your call) showing the model's behaviour on the test set: e.g. predicted fraud
-rate, score distribution, the top-flagged transactions, performance at your
-chosen alarm threshold, and whatever else helps an ops manager trust it.
-
-### Part D — Dockerize & deploy · *bonus*
-Containerise the API (and dashboard) and include a short deployment tutorial
-(`docker compose up`, env vars, how you'd run it in the cloud). Genuinely
-optional — only after A–C are solid.
-
-> Bonus thinking we love to see (notes are fine, no need to build it):
-> how you'd **monitor** this model in production, **detect drift**, and
-> **retrain** as repayment/chargeback outcomes accumulate.
+```
+fraudshield/
+├── backend/
+│   ├── api/
+│   │   ├── main.py                  # FastAPI app entry point
+│   │   └── routers/                 # analytics, auth, predictions,
+│   │                                # review, training, explainability,
+│   │                                # transactions, pipeline
+│   ├── config/settings.py           # central config (paths, DB, thresholds)
+│   ├── pipeline/
+│   │   ├── run_pipeline.py          # master pipeline runner (10 stages)
+│   │   ├── train.py                 # model training + evaluation
+│   │   ├── feature_engineering.py  # 20+ feature groups
+│   │   ├── imbalance.py             # class_weight / ADASYN strategies
+│   │   ├── explain.py               # SHAP global explanations
+│   │   ├── mlflow_tracking.py       # MLflow experiment logging
+│   │   └── db.py                    # SQLAlchemy schema + session
+│   ├── data/
+│   │   ├── raw/                     # train.csv, test.csv, identity.csv
+│   │   └── predictions.csv          # model scores on test.csv
+│   ├── models/                      # trained .pkl artifacts
+│   └── requirements.txt
+├── frontend/                        # Angular 20 SPA
+│   └── src/app/
+│       ├── pages/                   # dashboard, transactions, training,
+│       │                            # review-queue, explainability,
+│       │                            # model-comparison, model-monitoring
+│       └── core/                    # auth, api service, interceptors
+├── build.sh                         # Render build script
+├── render.yaml                      # Render deployment config
+└── README.md
+```
 
 ---
 
-## How you'll be scored
+## Approach
 
-Two parts, combined:
+### Data & Feature Engineering
 
-**1. Objective — your `predictions.csv` on the hidden test labels.**
-We run an automated scorer. The **primary metric is PR-AUC** (average
-precision), which is the honest metric under heavy class imbalance. We also look
-at the **operational view**: if ops can only manually review the top *X%* of
-riskiest transactions, what fraction of fraud do you catch? And at
-**calibration** (are your probabilities meaningful?).
+The dataset has three warts that required careful handling:
 
-**2. Qualitative — your code and write-up.** Roughly:
+1. **Temporal leakage** — `test.csv` transactions occur strictly after `train.csv` (verified via `TransactionDT`). Validation uses a temporal hold-out (last 20% of training data by time), not random split, to avoid overly optimistic metrics.
 
-| Area | What we look for |
+2. **Currency scale mismatch** — KES and NGN amounts differ by ~12×. All amounts are normalised to USD equivalents (`amt_usd`) and log-transformed (`log_amt`, `log_amt_usd`) before modelling.
+
+3. **`flagged_for_review` leakage** — this field is derived from model scores and is explicitly excluded from all features.
+
+**Feature groups (20+):**
+- Amount features: raw, USD-normalised, log-transformed, amount bins
+- Time features: hour of day, day of week, weekend/night flags, cyclical sin/cos encodings
+- Currency/channel/country one-hot encodings
+- Identity join features: device type, browser, OS (where available)
+- Interaction features: amount × channel, amount × country
+- Recipient/sender account age and velocity features
+
+### Model Selection
+
+Trained 10 models: 5 classifiers × 2 imbalance strategies:
+
+| Classifier | Strategy |
 |---|---|
-| ML methodology & evaluation | imbalance handling, validation design, metric choice, thresholding, calibration |
-| Data rigour & correctness | did you catch the leakage / integrity / join pitfalls in this data? |
-| Code quality & reproducibility | clean, runnable end-to-end from a fresh checkout |
-| API & dashboard | works, sensible design, useful to a non-technical user |
-| Communication | clear write-up; can you explain *why*, not just *what* |
-| AI-native working | effective use of AI tools **with** rigorous validation |
+| Logistic Regression | class_weight, ADASYN |
+| LightGBM (FLAML-tuned) | class_weight, ADASYN |
+| XGBoost (FLAML-tuned) | class_weight, ADASYN |
+| Random Forest (FLAML-tuned) | class_weight, ADASYN |
+| CatBoost (FLAML-tuned) | class_weight, ADASYN |
 
-There is no single "right" answer. Reasoned trade-offs, clearly explained, score
-better than an unexplained leaderboard number.
+FLAML AutoML is used for hyperparameter optimisation (300s budget per model, `average_precision` metric).
+
+### Champion Selection
+
+Champion is selected by composite score:
+
+```
+composite = 0.50 × recall + 0.20 × PR-AUC + 0.20 × AUC-ROC + 0.10 × F1
+```
+
+Recall is weighted highest because the operational cost of missing fraud (false negative) far exceeds the cost of a false alarm.
+
+### Threshold Selection
+
+For every model, thresholds are scanned from 0 → 1 at step 0.02. The threshold maximising F1 on the validation set is selected as the operating point. This gives a principled, operationally meaningful threshold rather than a default 0.5.
+
+### Evaluation Metrics
+
+Primary metric: **PR-AUC** (average precision) — the correct metric under heavy class imbalance (~3.5% fraud rate). Also tracked: AUC-ROC, F1 (fraud class), Precision, Recall, MCC, KS statistic.
 
 ---
 
-## Submission
+## Predictions
 
-Send us a **git repo** (or a zip) containing:
+`backend/data/predictions.csv` contains fraud probability scores for all 40,000 transactions in `test.csv`, in the format:
 
-1. All your code — pipeline, API, dashboard.
-2. Your trained **model artifact** (or a one-command script that reproduces it).
-3. **`predictions.csv`** — your scores on `test.csv`, matching
-   `sample_submission.csv` exactly:
+```csv
+TransactionID,isFraud_prob
+1120000,0.0019
+1120001,0.0011
+...
+```
 
-   ```csv
-   TransactionID,isFraud_prob
-   1120000,0.0131
-   1120001,0.8742
-   ...
-   ```
-   - one row per `TransactionID` in `test.csv` — no more, no fewer
-   - `isFraud_prob` is a probability/score in `[0, 1]`
+To regenerate:
+```bash
+cd backend
+python pipeline/run_pipeline.py
+```
 
-4. A top-level **`README`** with: how to run everything, your write-up
-   (approach, metrics, trade-offs, next steps), and your note on AI-tool usage.
+---
 
-Please don't spend more than ~6 hours. We'd rather see where you chose to stop.
+## API Endpoints
 
-Good luck — we're excited to see how you think.
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/health` | Health check |
+| POST | `/api/predictions/score` | Score a single transaction |
+| POST | `/api/predictions/score-batch` | Score a batch |
+| GET | `/api/analytics/summary` | Dashboard KPIs |
+| GET | `/api/training/status` | Pipeline status |
+| POST | `/api/training/run` | Trigger pipeline |
+| GET | `/api/explainability/feature-importance` | Feature importance |
+| GET | `/api/explainability/shap/global` | Global SHAP values |
+| GET | `/api/review/queue` | Human review queue |
+
+Full interactive docs: `/api/docs`
+
+---
+
+## Dashboard Features
+
+- **Overview** — fraud rate, alarm count, score distribution, top flagged transactions
+- **Transactions** — paginated transaction list with filters
+- **Advanced Analytics** — 3D risk landscape, model comparison charts, precision-recall curves, calibration plots
+- **Explainability** — SHAP global summary, LIME per-transaction explanations, feature importance
+- **ML Pipeline** — trigger training, monitor progress, compare model versions
+- **Human-in-the-Loop** — review queue for uncertain predictions, analyst decision recording
+
+---
+
+## Trade-offs & What I'd Improve
+
+**Trade-offs made:**
+- Used FLAML AutoML with a 300s budget per model rather than exhaustive grid search — faster iteration, good enough for a v1
+- SQLite for storage — zero-config for deployment, would switch to PostgreSQL for production
+- Temporal validation only (no cross-validation) — cross-validation with time-series data requires careful gap handling; the temporal hold-out is simpler and less leaky
+
+**With more time:**
+- Calibration — apply Platt scaling or isotonic regression so probabilities are meaningful for risk scoring, not just ranking
+- Drift detection — monitor input feature distributions and prediction score distributions over time using PSI/KS tests
+- Active learning loop — use the review queue decisions as labelled data to retrain the model periodically
+- Stacking ensemble — combine base model predictions as features for a meta-learner
+- Graph features — network-based features capturing transaction velocity and shared identifiers across accounts
+
+---
+
+## AI Tool Usage
+
+Claude (via Kiro) was used extensively throughout this project:
+
+- **Scaffolding** — initial project structure, FastAPI router setup, Angular component boilerplate
+- **Pipeline code** — feature engineering ideas, imbalance strategy implementation, MLflow integration
+- **Deployment** — Render configuration, CORS setup, build debugging
+
+**What I reviewed and validated:**
+- All feature engineering logic was manually checked for leakage (specifically `flagged_for_review` and temporal ordering)
+- The champion scoring formula was my own decision — I chose to weight recall at 50% based on the operational context (missing fraud is more costly than false alarms)
+- The threshold scanning approach (F1-optimal) was chosen deliberately over default 0.5
+- SHAP explanations were verified to match expected feature importance rankings
+
+The AI accelerated implementation significantly. All modelling decisions, metric choices, and trade-offs are mine.
