@@ -2,10 +2,9 @@ services:
   - type: web
     name: fraudshield
     runtime: python
-    rootDir: backend
     pythonVersion: "3.11.9"
-    buildCommand: "bash /opt/render/project/src/build.sh"
-    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: "bash build.sh"
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT --app-dir backend
     plan: free
     envVars:
       - key: DB_MODE
