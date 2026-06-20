@@ -7,7 +7,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pathlib import Path
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -50,15 +50,14 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api")
 
 # ── Protected ─────────────────────────────────────────────────────────────────
-_auth = [Depends(require_session)]
 
-app.include_router(pipeline.router,        prefix="/api/pipeline",        tags=["Pipeline"],        dependencies=_auth)
-app.include_router(analytics.router,       prefix="/api/analytics",       tags=["Analytics"],       dependencies=_auth)
-app.include_router(transactions.router,    prefix="/api/transactions",    tags=["Transactions"],    dependencies=_auth)
-app.include_router(predictions.router,     prefix="/api/predictions",     tags=["Predictions"],     dependencies=_auth)
-app.include_router(review.router,          prefix="/api/review",          tags=["Review"],          dependencies=_auth)
-app.include_router(training.router,        prefix="/api/training",        tags=["Training"],        dependencies=_auth)
-app.include_router(explainability.router,  prefix="/api/explainability",  tags=["Explainability"],  dependencies=_auth)
+app.include_router(pipeline.router,        prefix="/api/pipeline",        tags=["Pipeline"])
+app.include_router(analytics.router,       prefix="/api/analytics",       tags=["Analytics"])
+app.include_router(transactions.router,    prefix="/api/transactions",    tags=["Transactions"])
+app.include_router(predictions.router,     prefix="/api/predictions",     tags=["Predictions"])
+app.include_router(review.router,          prefix="/api/review",          tags=["Review"])
+app.include_router(training.router,        prefix="/api/training",        tags=["Training"])
+app.include_router(explainability.router,  prefix="/api/explainability",  tags=["Explainability"])
 
 
 @app.get("/api/health")
