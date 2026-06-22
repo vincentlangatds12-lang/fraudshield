@@ -22,19 +22,18 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   checkSession(): Observable<boolean> {
+    // In production, skip auth entirely — return a demo user immediately
+    if (environment.production) {
+      this._user.set({ email: 'demo@umba.com', name: 'Demo User', role: 'viewer' });
+      this._checked.set(true);
+      return of(true);
+    }
     return this.http
       .get<AuthUser>(`${environment.apiUrl}/auth/me`, { withCredentials: true })
       .pipe(
         tap(user => { this._user.set(user); this._checked.set(true); }),
         map(() => true),
         catchError(() => {
-          // Auto-login as demo user in production
-          if (environment.production) {
-            return this.login('demo@umba.com', 'demo').pipe(
-              map(() => { this._checked.set(true); return true; }),
-              catchError(() => { this._checked.set(true); return of(false); }),
-            );
-          }
           this._user.set(null);
           this._checked.set(true);
           return of(false);
