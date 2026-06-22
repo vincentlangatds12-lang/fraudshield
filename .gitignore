@@ -6,14 +6,11 @@ __pycache__/
 venv/
 *.pyc
 
-# ML artifacts (large files — not in git)
+# ML model artifacts (large — exclude all .pkl except champion)
 backend/models/*.pkl
 backend/models/*.joblib
-backend/data/*.db
-backend/data/*.db-journal
 backend/data/mlflow.db
-backend/data/predictions.csv
-backend/data/champion_cv*.csv
+backend/data/*.db-journal
 
 # Node
 frontend/node_modules/
