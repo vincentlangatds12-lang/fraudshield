@@ -15,6 +15,9 @@ backend/data/*.db-journal
 # Proprietary pipeline logic
 backend/pipeline/train.py
 backend/pipeline/run_pipeline.py
+backend/pipeline/feature_engineering.py
+
+
 
 # Node
 frontend/node_modules/
